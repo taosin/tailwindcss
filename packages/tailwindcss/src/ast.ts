@@ -2,10 +2,36 @@ import { parseAtRule } from './css-parser'
 
 const AT_SIGN = 0x40
 
+export type Range = [start: number, end: number]
+
+/**
+ * Represents a range in a source file or string and the range in the
+ * transformed output.
+ *
+ * e.g. `src` represents the original source position and `dst` represents the
+ * transformed position after reprinting.
+ *
+ * These numbers are indexes into the source code rather than line/column
+ * numbers. We compute line/column numbers lazily only when generating
+ * source maps.
+ */
+export interface Offsets {
+  src: Range
+  dst: Range | null
+}
+
 export type StyleRule = {
   kind: 'rule'
   selector: string
   nodes: AstNode[]
+
+  offsets: {
+    /** The bounds of the rule's selector */
+    selector?: Offsets
+
+    /** The bounds of the rule's body including the braces */
+    body?: Offsets
+  }
 }
 
 export type AtRule = {
@@ -13,6 +39,17 @@ export type AtRule = {
   name: string
   params: string
   nodes: AstNode[]
+
+  offsets: {
+    /** The bounds of the rule's name */
+    name?: Offsets
+
+    /** The bounds of the rule's params */
+    params?: Offsets
+
+    /** The bounds of the rule's body including the braces */
+    body?: Offsets
+  }
 }
 
 export type Declaration = {
@@ -20,22 +57,50 @@ export type Declaration = {
   property: string
   value: string | undefined
   important: boolean
+
+  offsets: {
+    /** The bounds of the property name */
+    property?: Offsets
+
+    /** The bounds of the property value */
+    value?: Offsets
+  }
 }
 
 export type Comment = {
   kind: 'comment'
   value: string
+
+  offsets: {
+    /** The bounds of the comment itself including open/close characters */
+    value?: Offsets
+  }
 }
 
 export type Context = {
   kind: 'context'
   context: Record<string, string | boolean>
   nodes: AstNode[]
+
+  offsets: {
+    /**
+     * The bounds of the "body"
+     *
+     * Since imports expand into context nodes this can, for example, represent
+     * the bounds of an entire `@import` rule.
+     */
+    body?: Offsets
+  }
 }
 
 export type AtRoot = {
   kind: 'at-root'
   nodes: AstNode[]
+
+  offsets: {
+    /** The bounds of the rule's body */
+    body?: Offsets
+  }
 }
 
 export type Rule = StyleRule | AtRule
@@ -46,6 +111,7 @@ export function styleRule(selector: string, nodes: AstNode[] = []): StyleRule {
     kind: 'rule',
     selector,
     nodes,
+    offsets: {},
   }
 }
 
@@ -55,6 +121,7 @@ export function atRule(name: string, params: string = '', nodes: AstNode[] = [])
     name,
     params,
     nodes,
+    offsets: {},
   }
 }
 
@@ -72,6 +139,7 @@ export function decl(property: string, value: string | undefined, important = fa
     property,
     value,
     important,
+    offsets: {},
   }
 }
 
@@ -79,6 +147,7 @@ export function comment(value: string): Comment {
   return {
     kind: 'comment',
     value: value,
+    offsets: {},
   }
 }
 
@@ -87,6 +156,7 @@ export function context(context: Record<string, string | boolean>, nodes: AstNod
     kind: 'context',
     context,
     nodes,
+    offsets: {},
   }
 }
 
@@ -94,6 +164,7 @@ export function atRoot(nodes: AstNode[]): AtRoot {
   return {
     kind: 'at-root',
     nodes,
+    offsets: {},
   }
 }
 
