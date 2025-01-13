@@ -5,6 +5,23 @@ const AT_SIGN = 0x40
 export type Range = [start: number, end: number]
 
 /**
+ * The source code for a given node in the AST
+ */
+export interface Source {
+  /**
+   * The path to the file that contains the referenced source code
+   *
+   * If this references the *output* source code, this is `null`.
+   */
+  file: string | null
+
+  /**
+   * The referenced source code
+   */
+  code: string
+}
+
+/**
  * Represents a range in a source file or string and the range in the
  * transformed output.
  *
@@ -16,6 +33,9 @@ export type Range = [start: number, end: number]
  * source maps.
  */
 export interface Offsets {
+  original?: Source
+  generated?: Source
+
   src: Range
   dst: Range | null
 }

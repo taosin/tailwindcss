@@ -25,6 +25,7 @@ import { compileCandidates } from './compile'
 import { substituteFunctions } from './css-functions'
 import * as CSS from './css-parser'
 import { buildDesignSystem, type DesignSystem } from './design-system'
+import type { DecodedSourceMap } from './source-maps/source-maps'
 import { Theme, ThemeOptions } from './theme'
 import { createCssUtility } from './utilities'
 import { segment } from './utils/segment'
@@ -35,6 +36,7 @@ const IS_VALID_PREFIX = /^[a-z]+$/
 
 type CompileOptions = {
   base?: string
+  map?: boolean
   loadModule?: (
     id: string,
     base: string,
@@ -617,8 +619,9 @@ export async function compile(
   root: Root
   features: Features
   build(candidates: string[]): string
+  buildSourceMap(): DecodedSourceMap
 }> {
-  let ast = CSS.parse(css)
+  let ast = CSS.parse(css, opts.map)
   let api = await compileAst(ast, opts)
   let compiledAst = ast
   let compiledCss = css
@@ -636,6 +639,10 @@ export async function compile(
       compiledAst = newAst
 
       return compiledCss
+    },
+
+    buildSourceMap() {
+      //
     },
   }
 }

@@ -47,6 +47,9 @@ export function parse(input: string, track?: boolean) {
   let buffer = ''
   let closingBracketStack = ''
 
+  // The start of the first non-whitespace character in the buffer
+  let bufferStart = 0
+
   let peekChar
 
   for (let i = 0; i < input.length; i++) {
@@ -63,6 +66,7 @@ export function parse(input: string, track?: boolean) {
     // ```
     //
     if (currentChar === BACKSLASH) {
+      if (buffer === '') bufferStart = i
       buffer += input.slice(i, i + 2)
       i += 1
     }
@@ -349,18 +353,14 @@ export function parse(input: string, track?: boolean) {
       if (track) {
         // TODO
         node.offsets.name = {
-          src: [i, i],
+          src: [bufferStart, bufferStart],
           dst: null,
         }
 
         // TODO
         node.offsets.params = {
-          src: [i, i],
+          src: [bufferStart, bufferStart],
           dst: null,
-        }
-
-        if (node.offsets.body) {
-          node.offsets.body.src[1] = i
         }
       }
 
@@ -394,13 +394,13 @@ export function parse(input: string, track?: boolean) {
       if (track) {
         // TODO
         declaration.offsets.property = {
-          src: [i, i],
+          src: [bufferStart, bufferStart],
           dst: null,
         }
 
         // TODO
         declaration.offsets.value = {
-          src: [i, i],
+          src: [bufferStart, i],
           dst: null,
         }
       }
@@ -436,24 +436,24 @@ export function parse(input: string, track?: boolean) {
         if (node.kind === 'rule') {
           // TODO
           node.offsets.selector = {
-            src: [i, i],
+            src: [bufferStart, bufferStart],
             dst: null,
           }
         } else if (node.kind === 'at-rule') {
           // TODO
           node.offsets.name = {
-            src: [i, i],
+            src: [bufferStart, bufferStart],
             dst: null,
           }
 
           // TODO
           node.offsets.params = {
-            src: [i, i],
+            src: [bufferStart, bufferStart],
             dst: null,
           }
         }
 
-        // TODO
+        // TODO: This might be correct already??
         node.offsets.body = {
           src: [i, i],
           dst: null,
@@ -507,19 +507,17 @@ export function parse(input: string, track?: boolean) {
           if (track) {
             // TODO
             node.offsets.name = {
-              src: [i, i],
+              src: [bufferStart, bufferStart],
               dst: null,
             }
 
             // TODO
             node.offsets.params = {
-              src: [i, i],
+              src: [bufferStart, bufferStart],
               dst: null,
             }
 
-            if (node.offsets.body) {
-              node.offsets.body.src[1] = i
-            }
+            // No body for this at-rule
           }
 
           // Reset the state for the next node.
@@ -551,13 +549,13 @@ export function parse(input: string, track?: boolean) {
             if (track) {
               // TODO
               node.offsets.property = {
-                src: [i, i],
+                src: [bufferStart, bufferStart],
                 dst: null,
               }
 
               // TODO
               node.offsets.value = {
-                src: [i, i],
+                src: [bufferStart, i],
                 dst: null,
               }
             }

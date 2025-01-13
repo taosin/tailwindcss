@@ -49,7 +49,7 @@ export async function substituteAtImports(
           await substituteAtImports(ast, loaded.base, loadStylesheet, recurseCount + 1)
 
           contextNode.nodes = buildImportNodes(
-            [context({ base: loaded.base }, ast)],
+            [context({ base: loaded.base, css: loaded.content }, ast)],
             layer,
             media,
             supports,
