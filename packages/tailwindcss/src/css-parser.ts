@@ -30,7 +30,10 @@ const DASH = 0x2d
 const AT_SIGN = 0x40
 const EXCLAMATION_MARK = 0x21
 
-export function parse(input: string) {
+export function parse(input: string, track?: boolean) {
+  // Note: it is important that any transformations of the input string
+  // *before* processing do NOT change the length of the string. This
+  // would invalidate the mechanism used to track source locations.
   input = input.replaceAll('\r\n', '\n')
 
   let ast: AstNode[] = []
@@ -103,7 +106,8 @@ export function parse(input: string) {
       // Collect all license comments so that we can hoist them to the top of
       // the AST.
       if (commentString.charCodeAt(2) === EXCLAMATION_MARK) {
-        licenseComments.push(comment(commentString.slice(2, -2)))
+        let node = comment(commentString.slice(2, -2))
+        licenseComments.push(node)
       }
     }
 
@@ -435,7 +439,8 @@ export function parse(input: string) {
 
           // Attach the declaration to the parent.
           if (parent) {
-            parent.nodes.push(parseDeclaration(buffer, colonIdx))
+            let node = parseDeclaration(buffer, colonIdx)
+            parent.nodes.push(node)
           }
         }
       }
